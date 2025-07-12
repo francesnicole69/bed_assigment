@@ -1,0 +1,25 @@
+{
+  "name": "bed_assigment",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/francesnicole69/bed_assigment.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/francesnicole69/bed_assigment/issues"
+  },
+  "homepage": "https://github.com/francesnicole69/bed_assigment#readme",
+  "dependencies": {
+    "dotenv": "^17.2.0",
+    "express": "^5.1.0",
+    "mssql": "^11.0.1"
+  }
+}
