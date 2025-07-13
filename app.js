@@ -23,7 +23,7 @@ app.use(express.static(path.join(__dirname, "public")));
   2. Import it here using require
   3. Use app.use() to mount it to a base path
 */
-const hospitalRoutes = require("./routes/hospital");
+const hospitalController = require("./controller/hospital");
 app.use("/hospitals", hospitalRoutes); // e.g., GET /hospitals
 
 // Static files inside specific folder (optional)
