@@ -1,12 +1,15 @@
 // Import required modules
+
 const express = require("express");
 const dotenv = require("dotenv");
 const sql = require("mssql");
 const path = require("path");
+const cors = require("cors");
 
 dotenv.config(); // Load environment variables
 
 const app = express();
+app.use(cors());
 const port = process.env.PORT || 3000;
 
 // Middleware to parse request bodies
@@ -23,8 +26,13 @@ app.use(express.static(path.join(__dirname, "public")));
   2. Import it here using require
   3. Use app.use() to mount it to a base path
 */
-const hospitalController = require("./controller/hospital");
-app.use("/hospitals", hospitalRoutes); // e.g., GET /hospitals
+const hospitalController = require("./Controller/hospitalController");
+
+// Hospital routes
+app.get("/hospitals", hospitalController.getAllHospitals);
+app.post("/hospitals", hospitalController.createHospital);
+app.delete("/hospitals", hospitalController.deleteAllHospitals);
+app.delete("/hospitals/:id", hospitalController.deleteHospitalById);
 
 // Static files inside specific folder (optional)
 app.use(express.static("Public/Hospital"));
