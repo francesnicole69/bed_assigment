@@ -1,6 +1,6 @@
 import { Sequelize, DataTypes } from 'sequelize'
 import moment from 'moment'
-import sequelize from '../../../Model/sequelize'
+import sequelize from './sequelize'
 
 // 我的收藏
 const StoreupModel = sequelize.define('StoreupModel', {
