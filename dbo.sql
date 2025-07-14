@@ -1,24 +1,4 @@
-/*
- Navicat Premium Data Transfer
 
- Source Server         : sqlserver
- Source Server Type    : SQL Server
- Source Server Version : 10504000
- Source Host           : DESKTOP-OJJCD9M\SQLEXPRESS:1433
- Source Catalog        : cl581915127
- Source Schema         : dbo
-
- Target Server Type    : SQL Server
- Target Server Version : 10504000
- File Encoding         : 65001
-
- Date: 10/07/2025 17:45:20
-*/
-
-
--- ----------------------------
--- Table structure for chat
--- ----------------------------
 IF EXISTS (SELECT * FROM sys.all_objects WHERE object_id = OBJECT_ID(N'[dbo].[chat]') AND type IN ('U'))
 	DROP TABLE [dbo].[chat]
 GO
