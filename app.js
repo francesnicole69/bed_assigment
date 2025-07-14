@@ -1,24 +1,26 @@
-// --- Ensure Express and app are initialized at the top ---
+
+//lucas
 const express = require('express');
 const fetch = require('node-fetch');
 const app = express();
 const cors = require("cors");
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// --- OpenRouteService Proxy Endpoint (must be after body parsers, before static files and other routes) ---
-// --- OSRM Proxy Endpoint (replaces OpenRouteService) ---
+// OSRM Proxy Endpoint
 app.post('/api/directions/:mode', async (req, res) => {
-  // mode: 'car', 'bike', 'foot' (OSRM profiles)
   const { mode } = req.params;
-  const { coordinates } = req.body; // expects [[lng, lat], [lng, lat], ...]
+  const { coordinates } = req.body;
+
   if (!Array.isArray(coordinates) || coordinates.length < 2) {
     return res.status(400).json({ error: 'Invalid coordinates' });
   }
-  // Build OSRM API URL
+
   const coordsStr = coordinates.map(c => c.join(',')).join(';');
   const url = `http://router.project-osrm.org/route/v1/${mode}/${coordsStr}?overview=full&geometries=geojson&alternatives=true&steps=true`;
+
   try {
     const osrmRes = await fetch(url);
     const data = await osrmRes.json();
@@ -27,39 +29,50 @@ app.post('/api/directions/:mode', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch directions from OSRM' });
   }
 });
-// Import required modules
+
 const dotenv = require("dotenv");
 const sql = require("mssql");
 const path = require("path");
 
 
-dotenv.config(); // Load environment variables
+// Load environment variables
+dotenv.config();
 
 
 
 const port = process.env.PORT || 3000;
 
-// Serve static files from the "public" folder
+// Static file hosting
 app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static("Public/Hospital")); // Optional hospital folder
 
-// ========== Import & Mount All Routes Below ==========
-/*
-  To add your own route:
-  1. Create a route file in the /routes folder (e.g., routes/yourFeature.js)
-  2. Import it here using require
-  3. Use app.use() to mount it to a base path
-*/
+// ========== Import Controllers ==========
 const hospitalController = require("./Controller/hospitalController");
+const feedbackController = require("./Controller/feedbackController");
+const healthController = require("./Controller/healthTrackerController");
 
-// Hospital routes
+// ========== Import Middleware ==========
+const validateFeedback = require("./Middleware/validateFeedback");
+const validateHealthRecord = require("./Middleware/validateHealthRecord");
+
+// ========== Hospital Routes ==========
 app.get("/hospitals", hospitalController.getAllHospitals);
 app.post("/hospitals", hospitalController.createHospital);
 app.delete("/hospitals/:id", hospitalController.deleteHospitalById);
 
-// Static files inside specific folder (optional)
-app.use(express.static("Public/Hospital"));
+// ========== Feedback Routes ==========
+app.get("/api/feedback", feedbackController.getAllFeedback);
+app.post("/api/feedback", validateFeedback, feedbackController.addFeedback);
+app.put("/api/feedback/:id", feedbackController.updateFeedback);
+app.delete("/api/feedback/:id", feedbackController.deleteFeedback);
 
-// Start the server
+// ========== Health Tracker Routes ==========
+app.get("/api/health", healthController.getAllRecords);
+app.post("/api/health", validateHealthRecord, healthController.addRecord);
+app.put("/api/health/:id", healthController.updateRecord);
+app.delete("/api/health/:id", healthController.deleteRecord);
+
+// ========== Start Server ==========
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
