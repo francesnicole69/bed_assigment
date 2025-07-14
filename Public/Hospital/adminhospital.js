@@ -123,6 +123,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     <p class="timing">Open: ${hospital.OpeningHours || 'N/A'}</p>
                     <div class="actions">
                       <button class="btn direction" data-hospital-idx="${idx}">Directions</button>
+                      <button class="btn delete" data-hospital-id="${hospital.HospitalID}">Delete</button>
                     </div>
                   </div>
                   <div class="distance">${hospital.routeDistance !== undefined ? hospital.routeDistance.toFixed(2) + ' km' : (hospital.distance !== Infinity ? hospital.distance.toFixed(2) + ' km' : 'N/A')}</div>
@@ -146,6 +147,25 @@ window.addEventListener('DOMContentLoaded', () => {
                 const hospitalAddr = encodeURIComponent(hospital.Address || '');
                 const url = `directions.html?userLat=${userLat}&userLng=${userLng}&hospitalLat=${hospitalLat}&hospitalLng=${hospitalLng}&hospitalName=${hospitalName}&hospitalAddr=${hospitalAddr}`;
                 window.open(url, '_blank');
+              });
+            });
+            // Add delete button logic
+            hospitalList.querySelectorAll('.btn.delete').forEach((btn) => {
+              btn.addEventListener('click', async () => {
+                const hospitalId = btn.getAttribute('data-hospital-id');
+                if (confirm('Are you sure you want to delete this hospital?')) {
+                  try {
+                    const res = await fetch(`/hospitals/${hospitalId}`, { method: 'DELETE' });
+                    if (res.ok) {
+                      alert('Hospital deleted successfully.');
+                      location.reload();
+                    } else {
+                      alert('Failed to delete hospital.');
+                    }
+                  } catch (e) {
+                    alert('Error deleting hospital.');
+                  }
+                }
               });
             });
           } catch (err) {

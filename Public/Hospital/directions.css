@@ -1,0 +1,70 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+  background: #f5f7fa;
+  color: #222;
+}
+.directions-container {
+  display: flex;
+  height: 100vh;
+}
+.route-list {
+  width: 350px;
+  background: #fff;
+  box-shadow: 2px 0 12px rgba(0,0,0,0.07);
+  padding: 2rem 1.5rem;
+  overflow-y: auto;
+}
+.route-list h2 {
+  margin-top: 0;
+  font-size: 1.5rem;
+  color: #0052cc;
+}
+#routes {
+  margin-top: 1.5rem;
+}
+.route-option {
+  background: #e3f0ff;
+  border-radius: 12px;
+  margin-bottom: 1.2rem;
+  padding: 1.2rem 1rem;
+  box-shadow: 0 2px 8px rgba(0,123,255,0.08);
+  cursor: pointer;
+  transition: box-shadow 0.2s, background 0.2s;
+}
+.route-option.selected {
+  background: #cce0ff;
+  box-shadow: 0 4px 16px rgba(0,123,255,0.15);
+}
+.route-option .mode {
+  font-weight: 600;
+  color: #007bff;
+  margin-bottom: 0.3rem;
+}
+.route-option .summary {
+  font-size: 1.1rem;
+  margin-bottom: 0.2rem;
+}
+.route-option .details {
+  font-size: 0.97rem;
+  color: #555;
+}
+.directions-map {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  background: #e3e9f3;
+  position: relative;
+}
+#directions-map-placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  border-radius: 0 0 0 0;
+  background: #f7faff;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
