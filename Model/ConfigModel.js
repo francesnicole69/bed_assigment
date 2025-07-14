@@ -1,6 +1,6 @@
 import { Sequelize, DataTypes } from 'sequelize'
 import moment from 'moment'
-import sequelize from '../backend/src/models/sequelize'
+import sequelize from './sequelize'
 
 // 轮播图
 const ConfigModel = sequelize.define('ConfigModel', {
