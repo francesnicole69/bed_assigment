@@ -1,6 +1,6 @@
 import { Sequelize, DataTypes } from 'sequelize'
 import moment from 'moment'
-import sequelize from './sequelize'
+import sequelize from '../backend/src/models/sequelize'
 
 // 吃药提醒
 const PopupRemindModel = sequelize.define('PopupRemindModel', {
