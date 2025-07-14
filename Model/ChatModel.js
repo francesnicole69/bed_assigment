@@ -1,6 +1,6 @@
 import { Sequelize, DataTypes } from 'sequelize'
 import moment from 'moment'
-import sequelize from './sequelize'
+import sequelize from '../backend/src/models/sequelize'
 
 // ai问答
 const ChatModel = sequelize.define('ChatModel', {
