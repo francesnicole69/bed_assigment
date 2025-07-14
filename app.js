@@ -1,12 +1,12 @@
 // Import required modules
-
 const express = require("express");
 const dotenv = require("dotenv");
 const sql = require("mssql");
 const path = require("path");
 const cors = require("cors");
 
-dotenv.config(); // Load environment variables
+// Load environment variables
+dotenv.config();
 
 const app = express();
 app.use(cors());
@@ -16,28 +16,38 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files from the "public" folder
+// Static file hosting
 app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static("Public/Hospital")); // Optional hospital folder
 
-// ========== Import & Mount All Routes Below ==========
-/*
-  To add your own route:
-  1. Create a route file in the /routes folder (e.g., routes/yourFeature.js)
-  2. Import it here using require
-  3. Use app.use() to mount it to a base path
-*/
+// ========== Import Controllers ==========
 const hospitalController = require("./Controller/hospitalController");
+const feedbackController = require("./Controller/feedbackController");
+const healthController = require("./Controller/healthTrackerController");
 
-// Hospital routes
+// ========== Import Middleware ==========
+const validateFeedback = require("./Middleware/validateFeedback");
+const validateHealthRecord = require("./Middleware/validateHealthRecord");
+
+// ========== Hospital Routes ==========
 app.get("/hospitals", hospitalController.getAllHospitals);
 app.post("/hospitals", hospitalController.createHospital);
 app.delete("/hospitals", hospitalController.deleteAllHospitals);
 app.delete("/hospitals/:id", hospitalController.deleteHospitalById);
 
-// Static files inside specific folder (optional)
-app.use(express.static("Public/Hospital"));
+// ========== Feedback Routes ==========
+app.get("/api/feedback", feedbackController.getAllFeedback);
+app.post("/api/feedback", validateFeedback, feedbackController.addFeedback);
+app.put("/api/feedback/:id", feedbackController.updateFeedback);
+app.delete("/api/feedback/:id", feedbackController.deleteFeedback);
 
-// Start the server
+// ========== Health Tracker Routes ==========
+app.get("/api/health", healthController.getAllRecords);
+app.post("/api/health", validateHealthRecord, healthController.addRecord);
+app.put("/api/health/:id", healthController.updateRecord);
+app.delete("/api/health/:id", healthController.deleteRecord);
+
+// ========== Start Server ==========
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
