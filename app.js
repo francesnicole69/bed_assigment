@@ -1,13 +1,27 @@
-
-//lucas
+const dotenv = require('dotenv');
+dotenv.config();
 const express = require('express');
 const fetch = require('node-fetch');
+const cors = require('cors');
 const app = express();
-const cors = require("cors");
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// GameScores routes
+const gameScoresController = require('./Controller/gameScoresController');
+app.use('/', gameScoresController);
+const colorMatchController = require('./Controller/colorMatchController');
+const colorMatchMiddleware = require('./Middleware/colorMatchMiddleware');
+// Color match game routes
+app.post('/colormatch/attempt', colorMatchMiddleware.validateColorAttempt, colorMatchController.saveColorAttempt);
+app.get('/colormatch/attempts/:userId', colorMatchController.getColorAttempts);
+const mathGameController = require('./Controller/mathGameController');
+const mathGameMiddleware = require('./Middleware/mathGameMiddleware');
+// Math game routes
+app.post('/mathgame/attempt', mathGameMiddleware.validateMathAttempt, mathGameController.saveMathAttempt);
+app.get('/mathgame/attempts/:userId', mathGameController.getMathAttempts);
 
 // OSRM Proxy Endpoint
 app.post('/api/directions/:mode', async (req, res) => {
@@ -30,21 +44,14 @@ app.post('/api/directions/:mode', async (req, res) => {
   }
 });
 
-const dotenv = require("dotenv");
-const sql = require("mssql");
-const path = require("path");
-
-
-// Load environment variables
-dotenv.config();
-
-
+const sql = require('mssql');
+const path = require('path');
 
 const port = process.env.PORT || 3000;
 
 // Static file hosting
-app.use(express.static(path.join(__dirname, "public")));
-app.use(express.static("Public/Hospital")); // Optional hospital folder
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static('Public/Hospital')); // Optional hospital folder
 
 // ========== Import Controllers ==========
 const hospitalController = require("./Controller/hospitalController");

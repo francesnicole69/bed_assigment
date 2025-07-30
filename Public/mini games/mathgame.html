@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Math Problem Solver</title>
+  <link rel="stylesheet" href="mathgame.css" />
+</head>
+<body>
+  <div class="math-header">🧮 Math Problem Solver</div>
+  <div class="math-container">
+    <div id="question-box" class="question-box"></div>
+    <input type="number" id="answer-input" class="answer-input" placeholder="Your answer..." />
+    <button id="submit-btn" class="submit-btn">Submit</button>
+    <div class="end-buttons" id="end-buttons" style="display:none;">
+      <button id="try-again-btn" class="submit-btn">Try Again</button>
+      <button id="return-btn" class="submit-btn" style="background:linear-gradient(90deg,#0052cc 80%,#43a7e7 100%);margin-left:1.2rem;">Return to Games</button>
+    </div>
+    <div id="feedback" class="feedback"></div>
+    <div id="score-box" class="score-box"></div>
+  </div>
+  <script src="mathgame.js"></script>
+</body>
+</html>

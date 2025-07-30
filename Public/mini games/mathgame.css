@@ -1,0 +1,81 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+  background: linear-gradient(120deg, #f5f7fa 0%, #e3e9f3 100%);
+  color: #333;
+  min-height: 100vh;
+}
+
+.math-header {
+  text-align: center;
+  padding: 2.5rem 0 1.2rem 0;
+  font-size: 2.3rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #007bff;
+  text-shadow: 0 2px 12px rgba(0,123,255,0.08);
+}
+
+.math-container {
+  max-width: 420px;
+  margin: 2.5rem auto;
+  background: linear-gradient(120deg, #e3f0ff 80%, #f7faff 100%);
+  border-radius: 18px;
+  box-shadow: 0 6px 18px rgba(0, 123, 255, 0.10);
+  padding: 2.2rem 2.2rem 2.7rem 2.2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.question-box {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 1.5rem;
+}
+
+.answer-input {
+  width: 80%;
+  padding: 0.7rem 1.2rem;
+  font-size: 1.2rem;
+  border-radius: 8px;
+  border: 1px solid #b3d1ff;
+  margin-bottom: 1.2rem;
+  outline: none;
+  transition: border 0.2s;
+}
+.answer-input:focus {
+  border: 1.5px solid #007bff;
+}
+
+.submit-btn {
+  background: linear-gradient(90deg, #28a745 80%, #43e97b 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 0.7rem 2.2rem;
+  cursor: pointer;
+  margin-bottom: 1.2rem;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.submit-btn:hover {
+  background: linear-gradient(90deg, #218838 80%, #43e97b 100%);
+  box-shadow: 0 4px 16px rgba(40,167,69,0.15);
+}
+
+.feedback {
+  font-size: 1.1rem;
+  color: #007bff;
+  margin-bottom: 1.2rem;
+  min-height: 1.2rem;
+}
+
+.score-box {
+  font-size: 1.2rem;
+  color: #222;
+  font-weight: 600;
+  margin-top: 1.2rem;
+}
