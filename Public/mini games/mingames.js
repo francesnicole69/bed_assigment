@@ -22,15 +22,53 @@ attemptsBox.addEventListener('click', async function() {
 
 async function loadAttempts() {
   let html = '';
-  // Fetch latest 5 scores from GameScores table
-  const res = await fetch('/gamescores/latest');
-  const scores = res.ok ? await res.json() : [];
-  html += `<div class='attempts-title'>All Games (latest 5):</div>`;
-  if (scores.length === 0) {
-    html += `<div class='attempts-none'>No attempts yet.</div>`;
-  } else {
-    html += '<ul class="attempts-ul">' + scores.map(a => `<li>Score: ${a.Score} / ${a.TotalQuestions} <span class='attempt-date'>${formatDate(a.Timestamp)}</span></li>`).join('') + '</ul>';
+  
+  try {
+    // Use individual endpoints (for demo purposes, using userId = 1)
+    const userId = 1;
+    
+    // Fetch Color Match attempts (GameId = 1)
+    const colorRes = await fetch(`/colormatch/attempts/${userId}`);
+    const colorAttempts = colorRes.ok ? await colorRes.json() : [];
+    
+    // Fetch Math Game attempts (GameId = 2) 
+    const mathRes = await fetch(`/mathgame/attempts/${userId}`);
+    const mathAttempts = mathRes.ok ? await mathRes.json() : [];
+    
+    // Display Color Match attempts
+    html += `<div class='attempts-title'>🎨 Color Match Game:</div>`;
+    if (colorAttempts.length === 0) {
+      html += `<div class='attempts-none'>No color match attempts yet.</div>`;
+    } else {
+      html += '<ul class="attempts-ul">';
+      colorAttempts.slice(0, 5).forEach(attempt => {
+        html += `<li>Score: ${attempt.Score}/${attempt.TotalQuestions} <span class='attempt-date'>${formatDate(attempt.Timestamp)}</span></li>`;
+      });
+      html += '</ul>';
+    }
+    
+    // Display Math Game attempts
+    html += `<div class='attempts-title'>➗ Math Game:</div>`;
+    if (mathAttempts.length === 0) {
+      html += `<div class='attempts-none'>No math game attempts yet.</div>`;
+    } else {
+      html += '<ul class="attempts-ul">';
+      mathAttempts.slice(0, 5).forEach(attempt => {
+        html += `<li>Score: ${attempt.Score}/${attempt.TotalQuestions} <span class='attempt-date'>${formatDate(attempt.Timestamp)}</span></li>`;
+      });
+      html += '</ul>';
+    }
+    
+    // Fallback: if both games have no attempts
+    if (colorAttempts.length === 0 && mathAttempts.length === 0) {
+      html = `<div class='attempts-none'>No game attempts yet. Play some games to see your scores!</div>`;
+    }
+    
+  } catch (error) {
+    console.error('Error loading attempts:', error);
+    html = `<div class='attempts-none'>Error loading attempts. Please try again.</div>`;
   }
+  
   attemptsList.innerHTML = html;
 }
 

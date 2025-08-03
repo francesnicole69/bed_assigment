@@ -2,7 +2,14 @@
 .attempts-title {
   font-weight: 600;
   margin-top: 1.2rem;
+  margin-bottom: 0.5rem;
   color: #0052cc;
+  font-size: 1.1rem;
+  border-bottom: 1px solid #e0e8f0;
+  padding-bottom: 0.3rem;
+}
+.attempts-title:first-child {
+  margin-top: 0.5rem;
 }
 .attempts-ul {
   margin: 0.3rem 0 0.7rem 1.2rem;
@@ -11,10 +18,16 @@
   color: #333;
   font-size: 1rem;
 }
+.attempts-ul li {
+  margin-bottom: 0.4rem;
+  padding: 0.3rem 0;
+}
 .attempts-none {
   color: #888;
   margin-left: 1.2rem;
+  margin-bottom: 0.8rem;
   font-size: 0.98rem;
+  font-style: italic;
 }
 .attempt-date {
   color: #888;
