@@ -26,13 +26,24 @@ async function loadAttempts() {
   try {
     // Use individual endpoints (for demo purposes, using userId = 1)
     const userId = 1;
+    const token = localStorage.getItem('token');
     
     // Fetch Color Match attempts (GameId = 1)
-    const colorRes = await fetch(`/colormatch/attempts/${userId}`);
+    const colorRes = await fetch(`/colormatch/attempts/${userId}`, {
+      headers: {
+        'Authorization': `Bearer ${token || ''}`,
+        'Content-Type': 'application/json'
+      }
+    });
     const colorAttempts = colorRes.ok ? await colorRes.json() : [];
     
     // Fetch Math Game attempts (GameId = 2) 
-    const mathRes = await fetch(`/mathgame/attempts/${userId}`);
+    const mathRes = await fetch(`/mathgame/attempts/${userId}`, {
+      headers: {
+        'Authorization': `Bearer ${token || ''}`,
+        'Content-Type': 'application/json'
+      }
+    });
     const mathAttempts = mathRes.ok ? await mathRes.json() : [];
     
     // Display Color Match attempts

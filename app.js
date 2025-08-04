@@ -5,6 +5,7 @@ const fetch = require('node-fetch');
 const cors = require('cors');
 const app = express();
 
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -17,13 +18,18 @@ const colorMatchMiddleware = require('./Middleware/colorMatchMiddleware');
 // Color match game routes
 app.post('/colormatch/attempt', colorMatchMiddleware.validateColorAttempt, colorMatchController.saveColorAttempt);
 app.get('/colormatch/attempts/:userId', colorMatchController.getColorAttempts);
+//app.get('/colormatch/attempts', authMiddleware.verifyJWT, colorMatchController.getColorAttempts);
 
 // Math game routes
 const mathGameController = require('./Controller/mathGameController');
 const mathGameMiddleware = require('./Middleware/mathGameMiddleware');
 app.post('/mathgame/attempt', mathGameMiddleware.validateMathAttempt, mathGameController.saveMathAttempt);
 app.get('/mathgame/attempts/:userId', mathGameController.getMathAttempts);
-
+//app.get('/mathgame/attempts', authMiddleware.verifyJWT, mathGameController.getMathAttempts);
+//add route register user and login user
+const userController = require('./Controller/UserController');
+app.post('/register', userController.registerUser);
+app.post('/login', userController.login);
 // OSRM Proxy Endpoint
 app.post('/api/directions/:mode', async (req, res) => {
   const { mode } = req.params;

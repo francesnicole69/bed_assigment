@@ -20,6 +20,7 @@ async function saveMathAttempt(req, res) {
 // Get all attempts for a user
 async function getMathAttempts(req, res) {
   try {
+    //let userId = req.user.id
     let userId = req.params.userId;
     if (!userId) {
       return res.status(400).json({ error: 'Missing userId' });
