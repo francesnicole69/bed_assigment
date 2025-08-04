@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Hospital - LBSA</title>
+    <link rel="stylesheet" href="createhospital.css">
+</head>
+<body>
+    <header>
+        <div class="logo">LBSA</div>
+        <nav>
+            <a href="adminhospital.html">Back to Admin</a>
+            <a href="hospital.html">Hospitals</a>
+            <a href="#">Home</a>
+        </nav>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="form-container">
+                <h1 class="page-title">Add New Hospital</h1>
+                <p class="subtitle">Fill in the details below to add a new hospital to the system</p>
+                
+                <form id="hospitalForm" class="hospital-form">
+                    <div class="form-group">
+                        <label for="hospitalName">Hospital Name</label>
+                        <input type="text" id="hospitalName" name="name" required 
+                               placeholder="Enter hospital name (e.g., Singapore General Hospital)">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="hospitalAddress">Address</label>
+                        <textarea id="hospitalAddress" name="address" required 
+                                  placeholder="Enter complete hospital address"></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="latitude">Latitude</label>
+                            <input type="number" id="latitude" name="latitude" step="any" required 
+                                   placeholder="1.2789 (decimal format)">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="longitude">Longitude</label>
+                            <input type="number" id="longitude" name="longitude" step="any" required 
+                                   placeholder="103.8345 (decimal format)">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" required 
+                               placeholder="+65 6222 3322">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="openingHours">Opening Hours</label>
+                        <input type="text" id="openingHours" name="openingHours" required 
+                               placeholder="24 Hours / Mon-Fri 8AM-6PM">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="goBack()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Hospital</button>
+                    </div>
+                </form>
+
+                <div id="message" class="message"></div>
+            </div>
+        </div>
+    </main>
+
+    <script src="createhospital.js"></script>
+</body>
+</html>

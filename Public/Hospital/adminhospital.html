@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Locate Nearby Hospitals</title>
-  <link rel="stylesheet" href="hospital.css" />
+  <link rel="stylesheet" href="adminhospital.css" />
 </head>
 <body>
   <header>
@@ -23,6 +23,12 @@
         <div class="map-placeholder" id="map-placeholder">🗺️ Map Placeholder</div>
       </section>
       <section class="hospital-list">
+        <div class="hospital-header">
+          <h2>Hospitals Near You</h2>
+          <button class="btn-add-hospital" onclick="window.location.href='createhospital.html'">
+            ➕ Add New Hospital
+          </button>
+        </div>
         <!-- Hospital cards with Directions and Delete buttons will be dynamically inserted here by adminhospital.js -->
       </section>
     </div>

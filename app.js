@@ -18,19 +18,19 @@ const colorMatchMiddleware = require('./Middleware/colorMatchMiddleware');
 const authMiddleware = require('./Middleware/authMiddleware');
 // Color match game routes
 app.post('/colormatch/attempt', authMiddleware.verifyJWT, colorMatchMiddleware.validateColorAttempt, colorMatchController.saveColorAttempt);
-app.get('/colormatch/attempts/:userId', colorMatchController.getColorAttempts);
 app.get('/colormatch/attempts', authMiddleware.verifyJWT, colorMatchController.getColorAttempts);
 
 // Math game routes
 const mathGameController = require('./Controller/mathGameController');
 const mathGameMiddleware = require('./Middleware/mathGameMiddleware');
 app.post('/mathgame/attempt', authMiddleware.verifyJWT, mathGameMiddleware.validateMathAttempt, mathGameController.saveMathAttempt);
-app.get('/mathgame/attempts/:userId', mathGameController.getMathAttempts);
 app.get('/mathgame/attempts', authMiddleware.verifyJWT, mathGameController.getMathAttempts);
 //add route register user and login user
 const userController = require('./Controller/UserController');
 app.post('/register', userController.registerUser);
 app.post('/login', userController.login);
+
+
 // OSRM Proxy Endpoint
 app.post('/api/directions/:mode', async (req, res) => {
   const { mode } = req.params;
@@ -73,6 +73,7 @@ const validateHealthRecord = require("./Middleware/validateHealthRecord");
 // ========== Hospital Routes ==========
 app.get("/hospitals", hospitalController.getAllHospitals);
 app.post("/hospitals", hospitalController.createHospital);
+app.put("/hospitals/:id", hospitalController.updateHospital);
 app.delete("/hospitals/:id", hospitalController.deleteHospitalById);
 
 // ========== Feedback Routes ==========
@@ -99,41 +100,6 @@ app.get("/debug/gamescores", async (req, res) => {
   } catch (error) {
     console.error("Database error:", error);
     res.status(500).json({ error: 'Database error' });
-  } finally {
-    if (connection) {
-      try { await connection.close(); } catch (err) { console.error("Error closing connection:", err); }
-    }
-  }
-});
-
-// ========== Test Data Route ==========
-app.post("/debug/add-test-data", async (req, res) => {
-  const sql = require('mssql');
-  const dbConfig = require('./dbConfig');
-  let connection;
-  try {
-    connection = await sql.connect(dbConfig);
-    
-    // Add some test color match data (GameId = 1)
-    await connection.request()
-      .input('userId1', sql.BigInt, 1)
-      .input('gameId1', sql.Int, 1)
-      .input('score1', sql.Int, 8)
-      .input('total1', sql.Int, 10)
-      .query('INSERT INTO GameScores (UserId, GameId, Score, TotalQuestions, Timestamp) VALUES (@userId1, @gameId1, @score1, @total1, GETDATE())');
-    
-    // Add some test math game data (GameId = 2)
-    await connection.request()
-      .input('userId2', sql.BigInt, 1)
-      .input('gameId2', sql.Int, 2)
-      .input('score2', sql.Int, 7)
-      .input('total2', sql.Int, 10)
-      .query('INSERT INTO GameScores (UserId, GameId, Score, TotalQuestions, Timestamp) VALUES (@userId2, @gameId2, @score2, @total2, GETDATE())');
-    
-    res.json({ message: 'Test data added successfully' });
-  } catch (error) {
-    console.error("Database error:", error);
-    res.status(500).json({ error: 'Database error', details: error.message });
   } finally {
     if (connection) {
       try { await connection.close(); } catch (err) { console.error("Error closing connection:", err); }

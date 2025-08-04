@@ -114,7 +114,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
             // Render nearest 4 in the hospital-list
             const hospitalList = document.querySelector('.hospital-list');
-            hospitalList.innerHTML = '<h2>Hospitals Near You</h2>' + nearest.map((hospital, idx) => `
+            hospitalList.innerHTML = `
+              <div class="hospital-header">
+                <h2>Hospitals Near You</h2>
+                <button class="btn-add-hospital" onclick="window.location.href='createhospital.html'">
+                  ➕ Add New Hospital
+                </button>
+              </div>
+            ` + nearest.map((hospital, idx) => `
               <div class="hospital-card">
                 <div class="card-content">
                   <div>

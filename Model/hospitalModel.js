@@ -102,9 +102,57 @@ async function createHospital(hospitalData) {
   }
 }
 
+// Update hospital
+async function updateHospital(id, hospitalData) {
+  let connection;
+  try {
+    connection = await sql.connect(dbConfig);
+    
+    // First check if hospital exists
+    const checkQuery = "SELECT HospitalID FROM Hospitals WHERE HospitalID = @id";
+    const checkRequest = connection.request();
+    checkRequest.input("id", id);
+    const checkResult = await checkRequest.query(checkQuery);
+    
+    if (checkResult.recordset.length === 0) {
+      return { error: "Hospital not found" };
+    }
+    
+    // Update hospital
+    const query = `
+      UPDATE Hospitals 
+      SET Name = @Name, Address = @Address, Latitude = @Latitude, 
+          Longitude = @Longitude, Phone = @Phone, OpeningHours = @OpeningHours
+      WHERE HospitalID = @id
+    `;
+    const request = connection.request();
+    request.input("id", id);
+    request.input("Name", hospitalData.Name);
+    request.input("Address", hospitalData.Address);
+    request.input("Latitude", hospitalData.Latitude);
+    request.input("Longitude", hospitalData.Longitude);
+    request.input("Phone", hospitalData.Phone);
+    request.input("OpeningHours", hospitalData.OpeningHours);
+    await request.query(query);
+    return { message: "Hospital updated successfully" };
+  } catch (error) {
+    console.error("Database error:", error);
+    throw error;
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error("Error closing connection:", err);
+      }
+    }
+  }
+}
+
 module.exports = {
   getAllHospitals,
   createHospital,
+  updateHospital,
   deleteAllHospitals,
   deleteHospitalById,
 };
