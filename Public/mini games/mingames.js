@@ -24,27 +24,48 @@ async function loadAttempts() {
   let html = '';
   
   try {
-    // Use individual endpoints (for demo purposes, using userId = 1)
-    const userId = 1;
+    // Get JWT token from localStorage
     const token = localStorage.getItem('token');
     
-    // Fetch Color Match attempts (GameId = 1)
-    const colorRes = await fetch(`/colormatch/attempts/${userId}`, {
-      headers: {
-        'Authorization': `Bearer ${token || ''}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    const colorAttempts = colorRes.ok ? await colorRes.json() : [];
+    if (!token) {
+      html = `<div class='attempts-none'>Please log in to view your game attempts.</div>`;
+      attemptsList.innerHTML = html;
+      return;
+    }
     
-    // Fetch Math Game attempts (GameId = 2) 
-    const mathRes = await fetch(`/mathgame/attempts/${userId}`, {
+    console.log('Token found, making requests...');
+    
+    // Fetch Color Match attempts using JWT-protected endpoint
+    const colorRes = await fetch(`/colormatch/attempts`, {
       headers: {
-        'Authorization': `Bearer ${token || ''}`,
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       }
     });
+    
+    console.log('Color response status:', colorRes.status);
+    if (!colorRes.ok) {
+      const errorText = await colorRes.text();
+      console.log('Color error response:', errorText);
+    }
+    const colorAttempts = colorRes.ok ? await colorRes.json() : [];
+    console.log('Color attempts:', colorAttempts);
+    
+    // Fetch Math Game attempts using JWT-protected endpoint
+    const mathRes = await fetch(`/mathgame/attempts`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log('Math response status:', mathRes.status);
+    if (!mathRes.ok) {
+      const errorText = await mathRes.text();
+      console.log('Math error response:', errorText);
+    }
     const mathAttempts = mathRes.ok ? await mathRes.json() : [];
+    console.log('Math attempts:', mathAttempts);
     
     // Display Color Match attempts
     html += `<div class='attempts-title'>🎨 Color Match Game:</div>`;

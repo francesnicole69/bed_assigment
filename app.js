@@ -15,17 +15,18 @@ const gameScoresController = require('./Controller/gameScoresController');
 app.use('/', gameScoresController);
 const colorMatchController = require('./Controller/colorMatchController');
 const colorMatchMiddleware = require('./Middleware/colorMatchMiddleware');
+const authMiddleware = require('./Middleware/authMiddleware');
 // Color match game routes
-app.post('/colormatch/attempt', colorMatchMiddleware.validateColorAttempt, colorMatchController.saveColorAttempt);
+app.post('/colormatch/attempt', authMiddleware.verifyJWT, colorMatchMiddleware.validateColorAttempt, colorMatchController.saveColorAttempt);
 app.get('/colormatch/attempts/:userId', colorMatchController.getColorAttempts);
-//app.get('/colormatch/attempts', authMiddleware.verifyJWT, colorMatchController.getColorAttempts);
+app.get('/colormatch/attempts', authMiddleware.verifyJWT, colorMatchController.getColorAttempts);
 
 // Math game routes
 const mathGameController = require('./Controller/mathGameController');
 const mathGameMiddleware = require('./Middleware/mathGameMiddleware');
-app.post('/mathgame/attempt', mathGameMiddleware.validateMathAttempt, mathGameController.saveMathAttempt);
+app.post('/mathgame/attempt', authMiddleware.verifyJWT, mathGameMiddleware.validateMathAttempt, mathGameController.saveMathAttempt);
 app.get('/mathgame/attempts/:userId', mathGameController.getMathAttempts);
-//app.get('/mathgame/attempts', authMiddleware.verifyJWT, mathGameController.getMathAttempts);
+app.get('/mathgame/attempts', authMiddleware.verifyJWT, mathGameController.getMathAttempts);
 //add route register user and login user
 const userController = require('./Controller/UserController');
 app.post('/register', userController.registerUser);

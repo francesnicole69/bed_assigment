@@ -101,17 +101,30 @@ returnBtn.addEventListener('click', () => {
 });
 
 function saveAttempt() {
-  // For demo, use userId=1
+  // Get JWT token and send with authenticated user ID
+  const token = localStorage.getItem('token');
+  if (!token) {
+    console.error('No JWT token found');
+    return;
+  }
+  
   fetch('/colormatch/attempt', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId: 1, score, attempts })
-  });
-  // Also save to GameScores table
-  fetch('/gamescores', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ score: score, totalQuestions: quiz.length })
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ score, attempts })
+  })
+  .then(response => {
+    if (response.ok) {
+      console.log('Color match attempt saved successfully');
+    } else {
+      console.error('Failed to save color match attempt:', response.status);
+    }
+  })
+  .catch(error => {
+    console.error('Error saving color match attempt:', error);
   });
 }
 

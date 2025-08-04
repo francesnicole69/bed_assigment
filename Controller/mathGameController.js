@@ -5,10 +5,14 @@ const dbConfig = require("../dbConfig");
 // Save a user's math game attempt
 async function saveMathAttempt(req, res) {
   try {
-    const { userId, score, attempts } = req.body;
+    const { score, attempts } = req.body;
+    const userId = req.user.id; // Get userId from JWT token
+    
     if (!userId || typeof score !== 'number' || !Array.isArray(attempts)) {
       return res.status(400).json({ error: 'Invalid input' });
     }
+    
+    console.log('Saving math attempt for userId:', userId, 'score:', score);
     const result = await mathGameModel.saveMathAttempt(userId, score, JSON.stringify(attempts));
     res.json(result);
   } catch (error) {
@@ -20,16 +24,21 @@ async function saveMathAttempt(req, res) {
 // Get all attempts for a user
 async function getMathAttempts(req, res) {
   try {
-    //let userId = req.user.id
-    let userId = req.params.userId;
+    let userId = req.user.id; // Get userId from JWT token
+    console.log('JWT user object:', req.user);
+    console.log('Extracted userId from JWT:', userId);
+    
     if (!userId) {
       return res.status(400).json({ error: 'Missing userId' });
     }
-    userId = parseInt(userId.trim());
+    userId = parseInt(userId);
     if (isNaN(userId)) {
       return res.status(400).json({ error: 'Invalid userId' });
     }
+    
+    console.log('Final userId for database query:', userId);
     const attempts = await mathGameModel.getMathAttempts(userId);
+    console.log('Retrieved attempts:', attempts);
     res.json(attempts);
   } catch (error) {
     console.error('Controller error:', error);
