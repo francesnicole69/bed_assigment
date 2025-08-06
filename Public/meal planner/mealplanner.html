@@ -29,7 +29,6 @@
             <div class="tab-headers">
                 <button class="tab-btn active" onclick="showTab('browse')">Browse Recipes</button>
                 <button class="tab-btn" onclick="showTab('add')">Add Recipe</button>
-                <button class="tab-btn" onclick="showTab('search')">Search Recipes</button>
             </div>
 
             <!-- Browse Recipes Tab -->
@@ -99,19 +98,6 @@
 
                     <button type="submit" class="submit-btn">Add Recipe</button>
                 </form>
-            </div>
-
-            <!-- Search Recipes Tab -->
-            <div id="search-tab" class="tab-content">
-                <div class="search-section">
-                    <div class="search-bar">
-                        <input type="text" id="searchInput" placeholder="Search recipes by name, ingredients, or instructions...">
-                        <button onclick="searchRecipes()" class="search-btn">Search</button>
-                    </div>
-                    <div class="search-results" id="searchResults">
-                        <p class="no-recipes">Enter a search term to find recipes</p>
-                    </div>
-                </div>
             </div>
         </div>
     </div>

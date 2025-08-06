@@ -77,7 +77,7 @@ class RecipeController {
         servings: parseInt(servings) || 1,
         difficulty: difficulty || 'Easy',
         description: description || '',
-        createdBy: req.user ? req.user.id : 1 // Use authenticated user ID if available
+        createdBy: 1 // Default user ID
       };
 
       const newRecipe = await RecipeModel.createRecipe(recipeData);
@@ -137,22 +137,6 @@ class RecipeController {
     } catch (error) {
       console.error('Controller error:', error);
       res.status(500).json({ error: 'Error deleting recipe' });
-    }
-  }
-
-  // Search recipes
-  static async searchRecipes(req, res) {
-    try {
-      const { q } = req.query;
-      if (!q || q.trim().length === 0) {
-        return res.status(400).json({ error: 'Search term is required' });
-      }
-
-      const recipes = await RecipeModel.searchRecipes(q.trim());
-      res.json(recipes);
-    } catch (error) {
-      console.error('Controller error:', error);
-      res.status(500).json({ error: 'Error searching recipes' });
     }
   }
 

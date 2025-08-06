@@ -3,12 +3,25 @@ dotenv.config();
 const express = require('express');
 const fetch = require('node-fetch');
 const cors = require('cors');
+const swaggerUi = require('swagger-ui-express');
 const app = express();
-
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Swagger setup with error handling
+try {
+  const swaggerDocument = require('./swagger-output.json');
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+  console.log('Swagger UI available at /api-docs');
+} catch (error) {
+  console.error('Error loading Swagger documentation:', error.message);
+  // Provide a fallback route
+  app.get('/api-docs', (req, res) => {
+    res.send('<h1>Swagger documentation not available</h1><p>Please run "node swagger.js" to generate documentation.</p>');
+  });
+}
 
 // GameScores routes
 const gameScoresController = require('./Controller/gameScoresController');
@@ -96,8 +109,7 @@ const {
   checkValidationResults,
   sanitizeInputs,
   validateMealTypeParam,
-  validateRecipeId,
-  validateSearchQuery
+  validateRecipeId
 } = require("./Middleware/recipeMiddleware");
 
 // Get all recipes
@@ -108,9 +120,6 @@ app.get("/api/recipes/mealtype/:mealType", validateMealTypeParam, RecipeControll
 
 // Get specific recipe by ID
 app.get("/api/recipes/:id", validateRecipeId, RecipeController.getRecipeById);
-
-// Search recipes
-app.get("/api/recipes/search", validateSearchQuery, RecipeController.searchRecipes);
 
 // Create new recipe
 app.post("/api/recipes", 

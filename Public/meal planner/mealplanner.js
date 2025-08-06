@@ -14,13 +14,6 @@ function setupEventListeners() {
     // Form submission
     document.getElementById('addRecipeForm').addEventListener('submit', handleAddRecipe);
     
-    // Search input enter key
-    document.getElementById('searchInput').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            searchRecipes();
-        }
-    });
-    
     // Modal close on outside click
     document.getElementById('recipeModal').addEventListener('click', function(e) {
         if (e.target === this) {
@@ -70,17 +63,19 @@ async function loadRecipesByMealType() {
             localRecipes = getSampleRecipesByMealType(mealType);
         }
         
-        // Fetch recipes from Spoonacular API
-        console.log('=== STARTING EXTERNAL RECIPE FETCH ===');
-        const externalRecipes = await fetchExternalRecipes(mealType);
-        console.log('External recipes received:', externalRecipes.length);
-        console.log('External recipes data:', externalRecipes);
+        // Try to fetch recipes from Spoonacular API, but don't fail if it doesn't work
+        let externalRecipes = [];
+        try {
+            externalRecipes = await fetchExternalRecipes(mealType);
+            console.log(`Successfully fetched ${externalRecipes.length} external recipes`);
+        } catch (error) {
+            console.warn('External API unavailable, using local recipes only:', error.message);
+            // Add some sample external-style recipes as fallback
+            externalRecipes = getSampleExternalRecipes(mealType);
+        }
         
         // Combine local and external recipes
         const allRecipes = [...localRecipes, ...externalRecipes];
-        console.log('Total combined recipes:', allRecipes.length);
-        console.log('Local recipes count:', localRecipes.length);
-        console.log('External recipes count:', externalRecipes.length);
         currentRecipes = allRecipes;
         
         if (allRecipes.length > 0) {
@@ -131,7 +126,7 @@ function createRecipeCard(recipe) {
     
     return `
         <div class="recipe-card ${isExternal ? 'external-recipe' : ''}">
-            ${recipe.image ? `<img src="${recipe.image}" alt="${recipeName}" class="recipe-card-image">` : ''}
+            ${recipe.image ? `<img src="${recipe.image}" alt="${recipeName}" class="recipe-card-image" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px 8px 0 0;">` : ''}
             
             <div class="recipe-card-header">
                 <h3>${escapeHtml(recipeName)}</h3>
@@ -167,14 +162,42 @@ async function viewFullRecipe(recipeId) {
         
         // Check if this is a Spoonacular recipe (string ID starting with 'sp_') or local recipe
         if (typeof recipeId === 'string' && recipeId.startsWith('sp_')) {
-            // This is a Spoonacular recipe
-            const spoonacularId = recipeId.replace('sp_', '');
-            recipe = await fetchSpoonacularRecipeDetails(spoonacularId);
-            
-            if (recipe) {
-                showRecipeModal(recipe, true); // true indicates external recipe
+            // Check if this is a sample external recipe
+            if (recipeId.startsWith('sp_sample_')) {
+                // This is a sample external recipe, find it in current recipes
+                const sampleRecipe = currentRecipes.find(r => r.RecipeID === recipeId);
+                if (sampleRecipe) {
+                    // Create a detailed view for the sample recipe
+                    const detailedSampleRecipe = {
+                        id: sampleRecipe.RecipeID,
+                        title: sampleRecipe.RecipeName,
+                        mealType: sampleRecipe.MealType,
+                        prepTime: sampleRecipe.PrepTime,
+                        cookTime: sampleRecipe.CookTime,
+                        totalTime: sampleRecipe.PrepTime + sampleRecipe.CookTime,
+                        servings: sampleRecipe.Servings,
+                        difficulty: sampleRecipe.Difficulty,
+                        description: sampleRecipe.Description,
+                        ingredients: getSampleIngredients(recipeId),
+                        instructions: getSampleInstructions(recipeId),
+                        image: sampleRecipe.image,
+                        sourceUrl: sampleRecipe.sourceUrl,
+                        isExternal: true
+                    };
+                    showRecipeModal(detailedSampleRecipe, true);
+                } else {
+                    showError('Sample recipe not found');
+                }
             } else {
-                showError('Error loading external recipe details');
+                // This is a real Spoonacular recipe
+                const spoonacularId = recipeId.replace('sp_', '');
+                recipe = await fetchSpoonacularRecipeDetails(spoonacularId);
+                
+                if (recipe) {
+                    showRecipeModal(recipe, true); // true indicates external recipe
+                } else {
+                    showError('Error loading external recipe details');
+                }
             }
         } else {
             // This is a local recipe
@@ -289,6 +312,16 @@ function showRecipeModal(recipe, isExternalRecipe = false) {
             
             ${recipe.image ? `<img src="${recipe.image}" alt="${recipeName}" style="width: 100%; max-width: 400px; height: auto; border-radius: 8px; margin: 15px 0;">` : ''}
             
+            ${(recipe.VideoURL || recipe.video_url) ? `
+                <div class="recipe-video">
+                    <h3>Recipe Video</h3>
+                    <video controls>
+                        <source src="${recipe.VideoURL || recipe.video_url}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+            ` : ''}
+            
             <div class="recipe-ingredients">
                 <h3>Ingredients</h3>
                 <ul>
@@ -318,12 +351,29 @@ async function handleAddRecipe(event) {
     event.preventDefault();
     
     const formData = new FormData(event.target);
+    
+    // Convert FormData to JSON object
+    const recipeData = {
+        recipeName: formData.get('recipeName'),
+        mealType: formData.get('mealType'),
+        instructions: formData.get('instructions'),
+        ingredients: formData.get('ingredients'),
+        prepTime: formData.get('prepTime'),
+        cookTime: formData.get('cookTime'),
+        servings: formData.get('servings'),
+        difficulty: formData.get('difficulty'),
+        description: formData.get('description')
+    };
+    
     showLoading(true);
     
     try {
         const response = await fetch('/api/recipes', {
             method: 'POST',
-            body: formData
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(recipeData)
         });
         
         const result = await response.json();
@@ -333,7 +383,7 @@ async function handleAddRecipe(event) {
             event.target.reset();
             
             // Reload recipes if we're viewing the same meal type
-            if (currentMealType === formData.get('mealType')) {
+            if (currentMealType === recipeData.mealType) {
                 loadRecipesByMealType();
             }
         } else {
@@ -350,57 +400,6 @@ async function handleAddRecipe(event) {
     } finally {
         showLoading(false);
     }
-}
-
-// Search recipes
-async function searchRecipes() {
-    const searchTerm = document.getElementById('searchInput').value.trim();
-    
-    if (!searchTerm) {
-        showError('Please enter a search term');
-        return;
-    }
-    
-    showLoading(true);
-    
-    try {
-        const response = await fetch(`/api/recipes/search?q=${encodeURIComponent(searchTerm)}`);
-        const recipes = await response.json();
-        
-        if (response.ok) {
-            displayRecipes(recipes, 'searchResults');
-        } else {
-            // If database is not set up, search in sample data
-            console.warn('Database not set up, searching in sample data');
-            const sampleResults = searchSampleRecipes(searchTerm);
-            displayRecipes(sampleResults, 'searchResults');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        // If API fails, search in sample data
-        console.warn('API failed, searching in sample data');
-        const sampleResults = searchSampleRecipes(searchTerm);
-        displayRecipes(sampleResults, 'searchResults');
-    } finally {
-        showLoading(false);
-    }
-}
-
-// Search in sample data
-function searchSampleRecipes(searchTerm) {
-    const allSampleRecipes = [
-        ...getSampleRecipesByMealType('Breakfast'),
-        ...getSampleRecipesByMealType('Lunch'),
-        ...getSampleRecipesByMealType('Dinner')
-    ];
-    
-    const lowerSearchTerm = searchTerm.toLowerCase();
-    return allSampleRecipes.filter(recipe => 
-        recipe.RecipeName.toLowerCase().includes(lowerSearchTerm) ||
-        recipe.Description.toLowerCase().includes(lowerSearchTerm) ||
-        recipe.Ingredients.toLowerCase().includes(lowerSearchTerm) ||
-        recipe.Instructions.toLowerCase().includes(lowerSearchTerm)
-    );
 }
 
 // Delete recipe
@@ -424,12 +423,6 @@ async function deleteRecipe(recipeId) {
             // Reload current view
             if (currentMealType) {
                 loadRecipesByMealType();
-            }
-            
-            // Clear search results if on search tab
-            const activeTab = document.querySelector('.tab-content.active');
-            if (activeTab && activeTab.id === 'search-tab') {
-                document.getElementById('searchResults').innerHTML = '<p class="no-recipes">Enter a search term to find recipes</p>';
             }
         } else {
             showError('Error deleting recipe: ' + result.error);
@@ -469,14 +462,14 @@ function formatDate(dateString) {
 
 // API Recipe Integration with Spoonacular
 async function fetchExternalRecipes(mealType) {
-    const API_KEY = '7ee54a5ccd2e46d4ab40ee298704f724';
-    const BASE_URL = 'https://api.spoonacular.com/recipes';
-    
-    console.log('=== SPOONACULAR API DEBUG START ===');
-    console.log('API_KEY:', API_KEY);
-    console.log('Meal Type:', mealType);
+    // Note: Direct API calls from browser may fail due to CORS or API key issues
+    // This is a fallback implementation that simulates external recipes
     
     try {
+        // Try a different API key or endpoint
+        const API_KEY = 'af04e68d00334fffbe04a9140059858d';
+        const BASE_URL = 'https://api.spoonacular.com/recipes';
+        
         // Map meal types to Spoonacular types
         const mealTypeMap = {
             'Breakfast': 'breakfast',
@@ -485,37 +478,36 @@ async function fetchExternalRecipes(mealType) {
         };
         
         const spoonacularType = mealTypeMap[mealType] || 'main course';
-        console.log('Mapped Spoonacular Type:', spoonacularType);
         
-        console.log(`Fetching ${mealType} recipes from Spoonacular API...`);
+        console.log(`Attempting to fetch ${mealType} recipes from Spoonacular API...`);
         
-        const apiUrl = `${BASE_URL}/complexSearch?type=${spoonacularType}&number=12&addRecipeInformation=true&apiKey=${API_KEY}`;
-        console.log('API URL:', apiUrl);
-        
-        // Fetch recipes from Spoonacular
-        const response = await fetch(apiUrl);
-        
-        console.log('Response Status:', response.status);
-        console.log('Response OK:', response.ok);
+        // Create the request with proper headers
+        const response = await fetch(
+            `${BASE_URL}/complexSearch?type=${spoonacularType}&number=6&addRecipeInformation=true&apiKey=${API_KEY}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
         
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('API Error Response:', errorText);
-            throw new Error(`Spoonacular API error: ${response.status} - ${errorText}`);
+            if (response.status === 401) {
+                throw new Error('API key invalid or expired (401)');
+            } else if (response.status === 402) {
+                throw new Error('API quota exceeded (402)');
+            } else {
+                throw new Error(`Spoonacular API error: ${response.status}`);
+            }
         }
         
         const data = await response.json();
-        console.log('API Response Data:', data);
-        console.log(`Received ${data.results ? data.results.length : 0} recipes from Spoonacular`);
+        console.log(`Successfully received ${data.results.length} recipes from Spoonacular`);
         
-        if (!data.results || data.results.length === 0) {
-            console.warn('No recipes returned from API');
-            return [];
-        }
-        
-        // Convert Spoonacular format to our format (condensed for recipe cards)
-        const convertedRecipes = data.results.map(recipe => {
-            // Calculate realistic times if they're 0
+        // Convert Spoonacular format to our format
+        return data.results.map(recipe => {
             const prepTime = recipe.preparationMinutes > 0 ? recipe.preparationMinutes : 
                             (recipe.readyInMinutes ? Math.max(5, Math.floor(recipe.readyInMinutes * 0.3)) : 15);
             const cookTime = recipe.cookingMinutes > 0 ? recipe.cookingMinutes : 
@@ -532,34 +524,29 @@ async function fetchExternalRecipes(mealType) {
                 Description: recipe.summary ? 
                     recipe.summary.replace(/<[^>]*>/g, '').substring(0, 150).trim() + '...' : 
                     'Delicious recipe from Spoonacular',
-                // Store minimal info for cards, full details will be fetched on demand
                 image: recipe.image,
                 IsExternal: true,
                 spoonacularId: recipe.id,
                 sourceUrl: recipe.sourceUrl,
-                // Don't include full ingredients/instructions in card view
                 Ingredients: 'Click "View Full Recipe" to see ingredients',
                 Instructions: 'Click "View Full Recipe" to see instructions',
-                CreatedDate: new Date().toISOString()
+                CreatedDate: new Date().toISOString(),
+                VideoURL: null
             };
         });
         
-        console.log('Converted Recipes:', convertedRecipes);
-        console.log('=== SPOONACULAR API DEBUG END ===');
-        return convertedRecipes;
-        
     } catch (error) {
-        console.error('=== SPOONACULAR API ERROR ===');
-        console.error('Error fetching external recipes:', error);
-        console.error('Error details:', error.message);
-        console.error('=== END API ERROR ===');
-        return [];
+        console.error('Error fetching external recipes:', error.message);
+        
+        // Instead of returning empty array, throw the error so it can be caught
+        // and fallback recipes can be used
+        throw new Error(`External API unavailable: ${error.message}`);
     }
 }
 
 // Fetch detailed recipe from Spoonacular
 async function fetchSpoonacularRecipeDetails(recipeId) {
-    const API_KEY = '7ee54a5ccd2e46d4ab40ee298704f724';
+    const API_KEY = 'af04e68d00334fffbe04a9140059858d';
     const BASE_URL = 'https://api.spoonacular.com/recipes';
     
     try {
@@ -639,7 +626,8 @@ function getSampleRecipesByMealType(mealType) {
                 Description: 'Fluffy and delicious pancakes perfect for breakfast',
                 Ingredients: '2 cups flour\n2 tablespoons sugar\n2 teaspoons baking powder\n1 teaspoon salt\n1 3/4 cups milk\n1 large egg\n1/4 cup melted butter',
                 Instructions: '1. Mix dry ingredients\n2. Combine wet ingredients\n3. Mix together until just combined\n4. Cook on griddle until bubbles form\n5. Flip and cook until golden',
-                CreatedDate: new Date().toISOString()
+                CreatedDate: new Date().toISOString(),
+                VideoURL: null
             },
             {
                 RecipeID: 2,
@@ -652,7 +640,8 @@ function getSampleRecipesByMealType(mealType) {
                 Description: 'Healthy and nutritious breakfast with protein',
                 Ingredients: '2 slices bread\n1 avocado\n1 egg\nSalt and pepper',
                 Instructions: '1. Toast bread\n2. Mash avocado\n3. Fry egg\n4. Assemble and serve',
-                CreatedDate: new Date().toISOString()
+                CreatedDate: new Date().toISOString(),
+                VideoURL: null
             }
         ],
         'Lunch': [
@@ -667,7 +656,8 @@ function getSampleRecipesByMealType(mealType) {
                 Description: 'Classic Caesar salad with grilled chicken',
                 Ingredients: '2 chicken breasts\n6 cups romaine lettuce\nCaesar dressing\nCroutons\nParmesan cheese',
                 Instructions: '1. Grill chicken\n2. Chop lettuce\n3. Make dressing\n4. Toss and serve',
-                CreatedDate: new Date().toISOString()
+                CreatedDate: new Date().toISOString(),
+                VideoURL: null
             },
             {
                 RecipeID: 4,
@@ -680,7 +670,8 @@ function getSampleRecipesByMealType(mealType) {
                 Description: 'Nutritious quinoa bowl with vegetables',
                 Ingredients: '1 cup quinoa\nMixed vegetables\nChickpeas\nTahini dressing',
                 Instructions: '1. Cook quinoa\n2. Roast vegetables\n3. Assemble bowl\n4. Add dressing',
-                CreatedDate: new Date().toISOString()
+                CreatedDate: new Date().toISOString(),
+                VideoURL: null
             }
         ],
         'Dinner': [
@@ -695,7 +686,8 @@ function getSampleRecipesByMealType(mealType) {
                 Description: 'Elegant salmon dinner with garlic butter',
                 Ingredients: '4 salmon fillets\nGarlic\nButter\nHerbs\nLemon',
                 Instructions: '1. Season salmon\n2. Sear in pan\n3. Add garlic butter\n4. Finish in oven',
-                CreatedDate: new Date().toISOString()
+                CreatedDate: new Date().toISOString(),
+                VideoURL: null
             },
             {
                 RecipeID: 6,
@@ -708,10 +700,294 @@ function getSampleRecipesByMealType(mealType) {
                 Description: 'Classic Italian pasta with creamy sauce',
                 Ingredients: '1 lb spaghetti\nPancetta\nEggs\nParmesan\nBlack pepper',
                 Instructions: '1. Cook pasta\n2. Cook pancetta\n3. Mix eggs and cheese\n4. Combine quickly',
-                CreatedDate: new Date().toISOString()
+                CreatedDate: new Date().toISOString(),
+                VideoURL: null
             }
         ]
     };
     
     return allSampleRecipes[mealType] || [];
+}
+
+// Fallback external-style recipes when Spoonacular API is unavailable
+function getSampleExternalRecipes(mealType) {
+    const externalSampleRecipes = {
+        'Breakfast': [
+            {
+                RecipeID: 'sp_sample_1',
+                RecipeName: 'French Toast Casserole',
+                MealType: 'Breakfast',
+                PrepTime: 15,
+                CookTime: 45,
+                Servings: 8,
+                Difficulty: 'Medium',
+                Description: 'Make-ahead breakfast casserole perfect for feeding a crowd. Rich, custardy, and delicious.',
+                image: 'https://images.unsplash.com/photo-1484723091739-30a097e8f929?w=400',
+                IsExternal: true,
+                sourceUrl: '#',
+                Ingredients: 'Click "View Full Recipe" to see ingredients',
+                Instructions: 'Click "View Full Recipe" to see instructions',
+                CreatedDate: new Date().toISOString(),
+                VideoURL: null
+            },
+            {
+                RecipeID: 'sp_sample_2',
+                RecipeName: 'Blueberry Smoothie Bowl',
+                MealType: 'Breakfast',
+                PrepTime: 10,
+                CookTime: 0,
+                Servings: 2,
+                Difficulty: 'Easy',
+                Description: 'Healthy and refreshing smoothie bowl topped with fresh fruits and granola.',
+                image: 'https://images.unsplash.com/photo-1511690743698-d9d85f2fbf38?w=400',
+                IsExternal: true,
+                sourceUrl: '#',
+                Ingredients: 'Click "View Full Recipe" to see ingredients',
+                Instructions: 'Click "View Full Recipe" to see instructions',
+                CreatedDate: new Date().toISOString(),
+                VideoURL: null
+            }
+        ],
+        'Lunch': [
+            {
+                RecipeID: 'sp_sample_3',
+                RecipeName: 'Mediterranean Wrap',
+                MealType: 'Lunch',
+                PrepTime: 15,
+                CookTime: 0,
+                Servings: 4,
+                Difficulty: 'Easy',
+                Description: 'Fresh and healthy wrap filled with Mediterranean flavors, perfect for a light lunch.',
+                image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400',
+                IsExternal: true,
+                sourceUrl: '#',
+                Ingredients: 'Click "View Full Recipe" to see ingredients',
+                Instructions: 'Click "View Full Recipe" to see instructions',
+                CreatedDate: new Date().toISOString(),
+                VideoURL: null
+            },
+            {
+                RecipeID: 'sp_sample_4',
+                RecipeName: 'Asian Fusion Bowl',
+                MealType: 'Lunch',
+                PrepTime: 20,
+                CookTime: 15,
+                Servings: 2,
+                Difficulty: 'Medium',
+                Description: 'Colorful and nutritious bowl with Asian-inspired flavors and fresh vegetables.',
+                image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400',
+                IsExternal: true,
+                sourceUrl: '#',
+                Ingredients: 'Click "View Full Recipe" to see ingredients',
+                Instructions: 'Click "View Full Recipe" to see instructions',
+                CreatedDate: new Date().toISOString(),
+                VideoURL: null
+            }
+        ],
+        'Dinner': [
+            {
+                RecipeID: 'sp_sample_5',
+                RecipeName: 'Herb-Crusted Chicken',
+                MealType: 'Dinner',
+                PrepTime: 15,
+                CookTime: 30,
+                Servings: 4,
+                Difficulty: 'Medium',
+                Description: 'Juicy chicken breast with a flavorful herb crust, served with roasted vegetables.',
+                image: 'https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=400',
+                IsExternal: true,
+                sourceUrl: '#',
+                Ingredients: 'Click "View Full Recipe" to see ingredients',
+                Instructions: 'Click "View Full Recipe" to see instructions',
+                CreatedDate: new Date().toISOString(),
+                VideoURL: null
+            },
+            {
+                RecipeID: 'sp_sample_6',
+                RecipeName: 'Vegetarian Risotto',
+                MealType: 'Dinner',
+                PrepTime: 10,
+                CookTime: 25,
+                Servings: 4,
+                Difficulty: 'Hard',
+                Description: 'Creamy and rich risotto with seasonal vegetables and parmesan cheese.',
+                image: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=400',
+                IsExternal: true,
+                sourceUrl: '#',
+                Ingredients: 'Click "View Full Recipe" to see ingredients',
+                Instructions: 'Click "View Full Recipe" to see instructions',
+                CreatedDate: new Date().toISOString(),
+                VideoURL: null
+            }
+        ]
+    };
+    
+    return externalSampleRecipes[mealType] || [];
+}
+
+// Get detailed ingredients for sample external recipes
+function getSampleIngredients(recipeId) {
+    const ingredients = {
+        'sp_sample_1': [
+            '8 slices thick bread, cubed',
+            '8 large eggs',
+            '2 cups whole milk',
+            '1/2 cup heavy cream',
+            '1/2 cup maple syrup',
+            '1 tsp vanilla extract',
+            '1/2 tsp cinnamon',
+            '1/4 tsp nutmeg',
+            'Pinch of salt',
+            '4 tbsp butter, melted'
+        ],
+        'sp_sample_2': [
+            '1 cup frozen blueberries',
+            '1 banana, sliced',
+            '1/2 cup Greek yogurt',
+            '1/4 cup almond milk',
+            '1 tbsp honey',
+            '1/4 cup granola',
+            '2 tbsp chia seeds',
+            'Fresh berries for topping',
+            '2 tbsp coconut flakes'
+        ],
+        'sp_sample_3': [
+            '4 large tortillas',
+            '1 cup hummus',
+            '2 cups mixed greens',
+            '1 cucumber, diced',
+            '2 tomatoes, diced',
+            '1/2 red onion, sliced',
+            '1/2 cup feta cheese',
+            '1/4 cup olives',
+            '2 tbsp olive oil',
+            '1 tbsp lemon juice'
+        ],
+        'sp_sample_4': [
+            '2 cups cooked quinoa',
+            '1 cup edamame',
+            '1 carrot, julienned',
+            '1 bell pepper, sliced',
+            '1/2 cup cabbage, shredded',
+            '2 green onions, chopped',
+            '2 tbsp sesame oil',
+            '2 tbsp soy sauce',
+            '1 tbsp rice vinegar',
+            '1 tsp ginger, minced'
+        ],
+        'sp_sample_5': [
+            '4 chicken breasts',
+            '2 tbsp olive oil',
+            '2 cloves garlic, minced',
+            '1 tbsp fresh rosemary',
+            '1 tbsp fresh thyme',
+            '1 tsp oregano',
+            '1/2 cup breadcrumbs',
+            '1/4 cup parmesan cheese',
+            'Salt and pepper to taste',
+            '2 cups mixed vegetables'
+        ],
+        'sp_sample_6': [
+            '1 1/2 cups arborio rice',
+            '4 cups vegetable broth',
+            '1 onion, diced',
+            '2 cloves garlic, minced',
+            '1/2 cup white wine',
+            '1 cup mixed mushrooms',
+            '1 zucchini, diced',
+            '1/2 cup peas',
+            '1/2 cup parmesan cheese',
+            '3 tbsp butter'
+        ]
+    };
+    
+    return ingredients[recipeId] || ['Ingredients not available'];
+}
+
+// Get detailed instructions for sample external recipes
+function getSampleInstructions(recipeId) {
+    const instructions = {
+        'sp_sample_1': [
+            'Grease a 9x13 inch baking dish',
+            'Place cubed bread in the prepared dish',
+            'In a large bowl, whisk together eggs, milk, cream, maple syrup, vanilla, cinnamon, nutmeg, and salt',
+            'Pour egg mixture over bread cubes',
+            'Cover and refrigerate for at least 4 hours or overnight',
+            'Preheat oven to 350°F (175°C)',
+            'Drizzle melted butter over the top',
+            'Bake for 45-50 minutes until golden brown and set',
+            'Let cool for 5 minutes before serving'
+        ],
+        'sp_sample_2': [
+            'Blend frozen blueberries, banana, Greek yogurt, almond milk, and honey until smooth',
+            'Pour smoothie mixture into bowls',
+            'Top with granola, chia seeds, and fresh berries',
+            'Sprinkle with coconut flakes',
+            'Serve immediately for best texture'
+        ],
+        'sp_sample_3': [
+            'Warm tortillas in microwave or dry skillet',
+            'Spread hummus evenly on each tortilla',
+            'Layer with mixed greens, cucumber, tomatoes, and red onion',
+            'Sprinkle with feta cheese and olives',
+            'Drizzle with olive oil and lemon juice',
+            'Roll tightly and cut in half',
+            'Serve immediately'
+        ],
+        'sp_sample_4': [
+            'Cook quinoa according to package directions and let cool',
+            'Steam edamame until tender',
+            'Prepare all vegetables by slicing and chopping',
+            'In a large bowl, combine quinoa, edamame, and vegetables',
+            'Whisk together sesame oil, soy sauce, rice vinegar, and ginger',
+            'Pour dressing over the bowl and toss well',
+            'Garnish with green onions',
+            'Serve chilled or at room temperature'
+        ],
+        'sp_sample_5': [
+            'Preheat oven to 400°F (200°C)',
+            'Pound chicken breasts to even thickness',
+            'Mix herbs, breadcrumbs, and parmesan in a bowl',
+            'Brush chicken with olive oil and season with salt and pepper',
+            'Press herb mixture onto chicken breasts',
+            'Place on baking sheet with vegetables',
+            'Drizzle vegetables with olive oil',
+            'Bake for 25-30 minutes until chicken reaches 165°F',
+            'Let rest for 5 minutes before slicing'
+        ],
+        'sp_sample_6': [
+            'Heat broth in a saucepan and keep warm',
+            'In a large pan, sauté onion and garlic until soft',
+            'Add rice and stir for 2 minutes until coated',
+            'Add wine and stir until absorbed',
+            'Add warm broth one ladle at a time, stirring constantly',
+            'Add mushrooms and zucchini halfway through cooking',
+            'Continue adding broth until rice is creamy and tender (about 20 minutes)',
+            'Stir in peas, butter, and parmesan',
+            'Season with salt and pepper, serve immediately'
+        ]
+    };
+    
+    return instructions[recipeId] || ['Instructions not available'];
+}
+
+function loadSampleRecipes() {
+    const sampleRecipes = [
+        {
+            RecipeID: 1,
+            RecipeName: 'Classic Pancakes',
+            MealType: 'Breakfast',
+            PrepTime: 10,
+            CookTime: 15,
+            Servings: 4,
+            Difficulty: 'Easy',
+            Description: 'Fluffy and delicious pancakes perfect for breakfast',
+            Ingredients: 'Flour\nMilk\nEggs\nBaking powder\nSalt\nSugar\nButter',
+            Instructions: 'Mix dry ingredients\nCombine wet ingredients\nMix together until just combined\nCook on griddle until bubbles form\nFlip and cook until golden',
+            CreatedDate: new Date().toISOString(),
+            VideoURL: null
+        }
+    ];
+    
+    displayRecipes(sampleRecipes, 'recipesGrid');
 }

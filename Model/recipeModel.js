@@ -195,39 +195,6 @@ class RecipeModel {
       throw error;
     }
   }
-
-  // Search recipes
-  static async searchRecipes(searchTerm) {
-    try {
-      const pool = await sql.connect(dbConfig);
-      const result = await pool.request()
-        .input('searchTerm', sql.NVarChar(255), `%${searchTerm}%`)
-        .query(`
-          SELECT 
-            RecipeID,
-            RecipeName,
-            MealType,
-            VideoURL,
-            Instructions,
-            Ingredients,
-            PrepTime,
-            CookTime,
-            Servings,
-            Difficulty,
-            Description,
-            CreatedBy
-          FROM Recipes 
-          WHERE RecipeName LIKE @searchTerm 
-             OR Ingredients LIKE @searchTerm 
-             OR Instructions LIKE @searchTerm
-          ORDER BY RecipeID DESC
-        `);
-      return result.recordset;
-    } catch (error) {
-      console.error('Error searching recipes:', error);
-      throw error;
-    }
-  }
 }
 
 module.exports = RecipeModel;
