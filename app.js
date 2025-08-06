@@ -88,6 +88,50 @@ app.post("/api/health", validateHealthRecord, healthController.addRecord);
 app.put("/api/health/:id", healthController.updateRecord);
 app.delete("/api/health/:id", healthController.deleteRecord);
 
+// ========== Recipe Routes ==========
+const { RecipeController } = require("./Controller/recipeController");
+const {
+  recipeValidationRules,
+  recipeUpdateValidationRules,
+  checkValidationResults,
+  sanitizeInputs,
+  validateMealTypeParam,
+  validateRecipeId,
+  validateSearchQuery
+} = require("./Middleware/recipeMiddleware");
+
+// Get all recipes
+app.get("/api/recipes", RecipeController.getAllRecipes);
+
+// Get recipes by meal type (breakfast, lunch, dinner)
+app.get("/api/recipes/mealtype/:mealType", validateMealTypeParam, RecipeController.getRecipesByMealType);
+
+// Get specific recipe by ID
+app.get("/api/recipes/:id", validateRecipeId, RecipeController.getRecipeById);
+
+// Search recipes
+app.get("/api/recipes/search", validateSearchQuery, RecipeController.searchRecipes);
+
+// Create new recipe
+app.post("/api/recipes", 
+  sanitizeInputs,
+  recipeValidationRules(),
+  checkValidationResults,
+  RecipeController.createRecipe
+);
+
+// Update recipe
+app.put("/api/recipes/:id",
+  validateRecipeId,
+  sanitizeInputs,
+  recipeUpdateValidationRules(),
+  checkValidationResults,
+  RecipeController.updateRecipe
+);
+
+// Delete recipe
+app.delete("/api/recipes/:id", validateRecipeId, RecipeController.deleteRecipe);
+
 // ========== Debug Route for GameScores ==========
 app.get("/debug/gamescores", async (req, res) => {
   const sql = require('mssql');

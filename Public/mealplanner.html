@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meal Planner - Recipe Manager</title>
+    <link rel="stylesheet" href="mealplanner.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🍽️ Meal Planner</h1>
+            <p>Discover and manage recipes for every meal</p>
+        </header>
+
+        <!-- Meal Type Selector -->
+        <div class="meal-selector">
+            <label for="mealType">Choose Meal Type:</label>
+            <select id="mealType" onchange="loadRecipesByMealType()">
+                <option value="">Select a meal type</option>
+                <option value="Breakfast">🥞 Breakfast</option>
+                <option value="Lunch">🥗 Lunch</option>
+                <option value="Dinner">🍽️ Dinner</option>
+            </select>
+        </div>
+
+        <!-- Recipe Tabs -->
+        <div class="recipe-tabs">
+            <div class="tab-headers">
+                <button class="tab-btn active" onclick="showTab('browse')">Browse Recipes</button>
+                <button class="tab-btn" onclick="showTab('add')">Add Recipe</button>
+                <button class="tab-btn" onclick="showTab('search')">Search Recipes</button>
+            </div>
+
+            <!-- Browse Recipes Tab -->
+            <div id="browse-tab" class="tab-content active">
+                <div class="recipes-grid" id="recipesGrid">
+                    <p class="no-recipes">Select a meal type to view recipes</p>
+                </div>
+            </div>
+
+            <!-- Add Recipe Tab -->
+            <div id="add-tab" class="tab-content">
+                <form id="addRecipeForm" class="recipe-form" enctype="multipart/form-data">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="recipeName">Recipe Name *</label>
+                            <input type="text" id="recipeName" name="recipeName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="formMealType">Meal Type *</label>
+                            <select id="formMealType" name="mealType" required>
+                                <option value="">Select meal type</option>
+                                <option value="Breakfast">Breakfast</option>
+                                <option value="Lunch">Lunch</option>
+                                <option value="Dinner">Dinner</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="prepTime">Prep Time (minutes)</label>
+                            <input type="number" id="prepTime" name="prepTime" min="0" max="1440">
+                        </div>
+                        <div class="form-group">
+                            <label for="cookTime">Cook Time (minutes)</label>
+                            <input type="number" id="cookTime" name="cookTime" min="0" max="1440">
+                        </div>
+                        <div class="form-group">
+                            <label for="servings">Servings</label>
+                            <input type="number" id="servings" name="servings" min="1" max="50" value="4">
+                        </div>
+                        <div class="form-group">
+                            <label for="difficulty">Difficulty</label>
+                            <select id="difficulty" name="difficulty">
+                                <option value="Easy">Easy</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Hard">Hard</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" rows="3" maxlength="1000"></textarea>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="ingredients">Ingredients *</label>
+                        <textarea id="ingredients" name="ingredients" rows="4" required placeholder="List ingredients, one per line or separated by commas"></textarea>
+                    </div>
+
+                    <div class="form-group full-width">
+                    <div class="form-group full-width">
+                        <label for="instructions">Instructions *</label>
+                        <textarea id="instructions" name="instructions" rows="6" required placeholder="Provide step-by-step cooking instructions"></textarea>
+                    </div>
+
+                    <button type="submit" class="submit-btn">Add Recipe</button>
+                </form>
+            </div>
+
+            <!-- Search Recipes Tab -->
+            <div id="search-tab" class="tab-content">
+                <div class="search-section">
+                    <div class="search-bar">
+                        <input type="text" id="searchInput" placeholder="Search recipes by name, ingredients, or instructions...">
+                        <button onclick="searchRecipes()" class="search-btn">Search</button>
+                    </div>
+                    <div class="search-results" id="searchResults">
+                        <p class="no-recipes">Enter a search term to find recipes</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recipe Detail Modal -->
+    <div id="recipeModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div id="recipeDetails"></div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <script src="mealplanner.js"></script>
+</body>
+</html>

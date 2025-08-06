@@ -1,8 +1,4 @@
 
-IF EXISTS (SELECT * FROM sys.all_objects WHERE object_id = OBJECT_ID(N'[dbo].[chat]') AND type IN ('U'))
-	DROP TABLE [dbo].[chat]
-GO
-
 CREATE TABLE [dbo].[chat] (
   [id] [bigint]  primary key,
   [addtime] datetime2(0) DEFAULT (getdate()) NULL,
